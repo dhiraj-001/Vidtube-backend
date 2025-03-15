@@ -2,14 +2,19 @@
   "name": "backend-01",
   "version": "1.0.0",
   "description": "first backend project",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon/index.js"
   },
   "keywords": [
     "javascript",
     "backend"
   ],
   "author": "Dhiraj Gogoi",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.9",
+    "prettier": "^3.5.3"
+  }
 }
