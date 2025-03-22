@@ -20,6 +20,8 @@ import fs from 'fs';
            }
        )
        console.log("File uploaded successfully on", uploadResult.url);
+       fs.unlinkSync(localFilePath)
+      return uploadResult;
     } catch (error) {
       fs.unlinkSync(localFilePath) // remove temporary stored file
       return null;
