@@ -1,7 +1,10 @@
 import { User } from "../models/user.model.js";
 import ApiError from "../utils/ApiError.js";
 import { asyncHandeler } from "../utils/asyncHandeler.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import {
+  uploadOnCloudinary,
+  deletefromCloudinary,
+} from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 
@@ -286,16 +289,17 @@ const updateCurrentUser = asyncHandeler(async (req, res) => {
     .json(new ApiResponse(200, user, "User updated successfully"));
 });
 
-const updateAvatar = asyncHandeler(async (req, res) =>{
+const updateAvatar = asyncHandeler(async (req, res) => {
   const avatarLocalPath = req.file?.path;
 
   if (!avatarLocalPath) {
     throw new ApiError(400, "Avatar file is missing");
   }
-
+  const oldAvatarUrl = req.user?.avatar;
+  await deletefromCloudinary(oldAvatarUrl);
   const avatar = await uploadOnCloudinary(avatarLocalPath);
 
-  if(!avatar){
+  if (!avatar) {
     throw new ApiError(400, "Failed to upload avatar");
   }
 
@@ -309,14 +313,14 @@ const updateAvatar = asyncHandeler(async (req, res) =>{
     {
       new: true,
     }
-  ).select("-password")
+  ).select("-password");
 
   return res
-   .status(200)
-   .json(new ApiResponse(200, user, "Avatar updated successfully"));
+    .status(200)
+    .json(new ApiResponse(200, user, "Avatar updated successfully"));
 });
 
-const updateCoverImage = asyncHandeler(async (req, res) =>{
+const updateCoverImage = asyncHandeler(async (req, res) => {
   const coverImagePath = req.file?.path;
 
   if (!coverImagePath) {
@@ -325,7 +329,7 @@ const updateCoverImage = asyncHandeler(async (req, res) =>{
 
   const coverImg = await uploadOnCloudinary(avatarLocalPath);
 
-  if(!coverImg){
+  if (!coverImg) {
     throw new ApiError(400, "Failed to upload cover image");
   }
 
@@ -339,9 +343,48 @@ const updateCoverImage = asyncHandeler(async (req, res) =>{
     {
       new: true,
     }
-  ).select("-password")
+  ).select("-password");
 
-  res.status(200).json(new ApiResponse(200,user,"Cover Image updated successfullty"));
+  res
+    .status(200)
+    .json(new ApiResponse(200, user, "Cover Image updated successfullty"));
+});
+
+const getUserChannelProfile = asyncHandeler(async (req, res) => {
+  const { userName } = req.params;
+  if (!userName?.trim()) {
+    throw new ApiError(400, "Username is missing");
+  }
+
+  const channel = await User.aggregate([
+    {
+      $match: {
+        userName: userName?.tolowerCase(),
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscriberedTo",
+      },
+    },
+    {
+      $addFields: {
+        subscribersCount: { $size: "$subscribers" },
+        subscriberedToCount: { $size: "$subscriberedTo" },
+      },
+    },
+  ]);
 });
 
 export {
