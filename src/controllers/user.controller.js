@@ -23,6 +23,7 @@ const generateAccessefreshToken = async (userId) => {
     throw new ApiError(500, "Error while generating access and refresh tokens");
   }
 };
+
 const registerUser = asyncHandeler(async (req, res) => {
   // get user details from frontend
   // validation
@@ -99,7 +100,7 @@ const loginUser = asyncHandeler(async (req, res) => {
   // send cookies
 
   const { userName, email, password } = req.body;
-  console.log(req.body);
+
 
   if (!(userName || email)) {
     throw new ApiError(400, "Username or email is required");
@@ -328,7 +329,7 @@ const updateCoverImage = asyncHandeler(async (req, res) => {
     throw new ApiError(400, "Cover Image file is missing");
   }
 
-  const coverImg = await uploadOnCloudinary(avatarLocalPath);
+  const coverImg = await uploadOnCloudinary(coverImagePath);
 
   if (!coverImg) {
     throw new ApiError(400, "Failed to upload cover image");

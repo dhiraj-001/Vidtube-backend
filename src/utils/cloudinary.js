@@ -30,9 +30,9 @@ const deletefromCloudinary = async (imageUrl) => {
   try {
     cloudinary.uploader.destroy(publicId, (error, result) => {
       if (error) {
-          return res.status(500).json({ error: 'Failed to delete image', details: error });
+          return null;
       }
-      res.status(200).json({ message: 'Image deleted successfully', result });
+     
   });
 
   } catch (error) {
