@@ -133,7 +133,7 @@ const loginUser = asyncHandeler(async (req, res) => {
 
   const options = {
     httpOnly: true, //cookies cannot be modified from frontend
-    secure: true,
+    secure: process.env.NODE_ENV === 'production',
   };
 
   return res
