@@ -65,7 +65,8 @@ const registerUser = asyncHandeler(async (req, res) => {
   const avatar = await uploadOnCloudinary(avatarLocalPath);
 
   const coverImage = await uploadOnCloudinary(coverImagePath);
-  console.log(avatar);
+
+  // console.log(avatar);
   if (!avatar) {
     throw new ApiError(400, "Avatar file is missing");
   }
@@ -77,6 +78,7 @@ const registerUser = asyncHandeler(async (req, res) => {
     password,
     avatar: avatar.url,
     coverImage: coverImage?.url || "",
+    
   });
 
   const createdUser = await User.findById(user._id).select(
