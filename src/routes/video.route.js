@@ -13,9 +13,8 @@ import {
 
 const router = Router();
 
-router.use(verifyJWT); // Apply verifyJWT to all the routes
-
 router.route("/publishvideo").post(
+  verifyJWT,
   upload.fields([
     {
       name: "videosFile",
@@ -30,6 +29,7 @@ router.route("/publishvideo").post(
 );
 
 router.route("/videos/:videoId").put(
+  verifyJWT,
   upload.fields([
     {
       name: "videosFile",
@@ -43,8 +43,8 @@ router.route("/videos/:videoId").put(
   updateVideo
 );
 
-router.route("/videos/delete/:videoId").delete(deleteVideo);
-router.route("/videos/change-status/:videoId").post(togglePublishStatus);
-router.route("/videos/get-video/:videoId").get(getVideoById);
+router.route("/videos/delete/:videoId").delete(verifyJWT, deleteVideo);
+router.route("/videos/change-status/:videoId").post(verifyJWT, togglePublishStatus);
+router.route("/videos/get-video/:videoId").get(verifyJWT, getVideoById);
 router.route("/videos").get(getAllVideos);
 export default router;
