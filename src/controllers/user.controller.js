@@ -261,7 +261,7 @@ const changeCurrentPassword = asyncHandeler(async (req, res) => {
 });
 
 const getCurrentUser = asyncHandeler(async (req, res) => {
-  return res.status(200).json(200, req.user, "User retrieved successfully");
+  return res.status(200).json(new ApiResponse(200, req.user, "User retrieved successfully"));
 });
 
 const updateCurrentUser = asyncHandeler(async (req, res) => {
