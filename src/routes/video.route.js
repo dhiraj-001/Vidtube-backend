@@ -45,6 +45,6 @@ router.route("/videos/:videoId").put(
 
 router.route("/videos/delete/:videoId").delete(verifyJWT, deleteVideo);
 router.route("/videos/change-status/:videoId").post(verifyJWT, togglePublishStatus);
-router.route("/videos/get-video/:videoId").get(verifyJWT, getVideoById);
+router.route("/videos/get-video/:videoId").get( getVideoById);
 router.route("/videos").get(getAllVideos);
 export default router;
