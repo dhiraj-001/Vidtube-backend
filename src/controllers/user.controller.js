@@ -1,4 +1,5 @@
 import { User } from "../models/user.model.js";
+import { OTP } from "../models/otp.model.js";
 import ApiError from "../utils/ApiError.js";
 import { asyncHandeler } from "../utils/asyncHandeler.js";
 import {
@@ -8,6 +9,8 @@ import {
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import otpGenerator from "otp-generator";
+import sendEmail from "../utils/sendEmail.js";
 
 const generateAccessefreshToken = async (userId) => {
   try {
@@ -24,21 +27,75 @@ const generateAccessefreshToken = async (userId) => {
   }
 };
 
-const registerUser = asyncHandeler(async (req, res) => {
-  // get user details from frontend
-  // validation
-  // check for duplicate user
-  // check from image, avater
-  // upload in cloudinary
-  // create user object - create entry in db
-  // remove password and refresh token from response
-  // check for user creation
-  // return response
+const sendOTP = asyncHandeler(async (req, res) => {
+  const { email } = req.body;
 
+  if (!email) {
+    throw new ApiError(400, "Email is required");
+  }
+
+  // Check if user already exists
+  const existedUser = await User.findOne({ email });
+  if (existedUser) {
+    throw new ApiError(409, "User with this email already exists");
+  }
+
+  // Generate OTP
+  const otp = otpGenerator.generate(6, {
+    digits: true,
+    alphabets: false,
+    upperCase: false,
+    specialChars: false,
+  });
+
+  // Save OTP to database
+  await OTP.create({
+    email,
+    otp,
+  });
+
+  // Send OTP via email
+  const emailText = `Your OTP for VidTube registration is: ${otp}. This OTP will expire in 5 minutes.`;
+  await sendEmail(email, "VidTube Registration OTP", emailText);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "OTP sent successfully"));
+});
+
+const verifyOTP = asyncHandeler(async (req, res) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    throw new ApiError(400, "Email and OTP are required");
+  }
+
+  // Find the OTP in database
+  const otpRecord = await OTP.findOne({ email, otp });
+
+  if (!otpRecord) {
+    throw new ApiError(400, "Invalid OTP");
+  }
+
+  // Delete the OTP after successful verification
+  await OTP.deleteOne({ email, otp });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "OTP verified successfully"));
+});
+
+const registerUser = asyncHandeler(async (req, res) => {
   const { userName, email, fullName, password } = req.body;
 
   if ([userName, email, fullName, password].some((val) => val?.trim() === "")) {
     throw new ApiError("400", "All fields are required");
+  }
+
+  // Verify OTP before registration
+  const otpRecord = await OTP.findOne({ email });
+  if (!otpRecord) {
+    throw new ApiError(400, "Please verify your email with OTP first");
   }
 
   const existedUser = await User.findOne({
@@ -63,10 +120,8 @@ const registerUser = asyncHandeler(async (req, res) => {
   }
 
   const avatar = await uploadOnCloudinary(avatarLocalPath);
-
   const coverImage = await uploadOnCloudinary(coverImagePath);
 
-  // console.log(avatar);
   if (!avatar) {
     throw new ApiError(400, "Avatar file is missing");
   }
@@ -78,8 +133,10 @@ const registerUser = asyncHandeler(async (req, res) => {
     password,
     avatar: avatar.url,
     coverImage: coverImage?.url || "",
-    
   });
+
+  // Delete OTP after successful registration
+  await OTP.deleteOne({ email });
 
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
@@ -485,5 +542,7 @@ export {
   updateAvatar,
   updateCoverImage,
   getUserChannelProfile,
-  watchHistory
+  watchHistory,
+  sendOTP,
+  verifyOTP,
 };

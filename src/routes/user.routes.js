@@ -11,11 +11,18 @@ import {
   getUserChannelProfile,
   watchHistory,
   updateCurrentUser,
+  sendOTP,
+  verifyOTP,
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
+
+// OTP routes
+router.route("/send-otp").post(sendOTP);
+router.route("/verify-otp").post(verifyOTP);
+
 router.route("/register").post(
   upload.fields([
     { name: "avatar", maxCount: 1 },
